@@ -1,7 +1,17 @@
+---------------
+--- Helpers ---
+---------------
+-- "Borrowed" function from EZRanks
+local function rainbow()
+	local red = math.sin(.5 * RealTime()) * 127 + 128
+	local green = math.sin(.5 * RealTime() + 2) * 127 + 128
+	local blue = math.sin(.5 * RealTime() + 4) * 127 + 128
+	return Color(red, green, blue)
+end
+
 ----------------------
 --- Data Functions ---
 ----------------------
-
 function ulx.populateNameTags(tags)
 	ulx.nameTags = {}
 	
@@ -38,153 +48,9 @@ function ulx.updateNameTag(steamid, tag)
 	end
 end
 
----------------------------------
---- Scoreboard Quick Commands ---
----------------------------------
-
-function ulx.showNameTagRequestDialog()
-	local w,h = 250,189
-	
-	local frame = vgui.Create("DFrame")
-	frame:SetSize(w, h)
-	frame:SetTitle("Name Tag Change Request")
-	frame:Center()
-	
-	local contentbox = vgui.Create("DTextEntry", frame)
-	contentbox:SetValue(ulx.nameTags[LocalPlayer():SteamID()].content)
-	contentbox:StretchToParent(5, 30, 5, 0)
-	contentbox:SetTall(25)
-	
-	local colormixer = vgui.Create("DColorMixer", frame)
-	colormixer:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
-	colormixer:SetWangs(true)
-	colormixer:SetAlphaBar(false)
-	colormixer:SetPalette(false)
-	colormixer:StretchToParent(5, 60, 5, 0)
-	colormixer:SetTall(68)
-	
-	local previewpanel = vgui.Create("DPanel", frame)
-	previewpanel:SetBackgroundColor(Color(0, 0, 0))
-	previewpanel:StretchToParent(5, 133, 5, 0)
-	previewpanel:SetTall(24)
-	
-	local previewtext = vgui.Create("DLabel", previewpanel)
-	previewtext:SetFont("treb_small")
-	previewtext:SetText(ulx.nameTags[LocalPlayer():SteamID()].content)	
-	previewtext:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)	
-	previewtext:SizeToContents()
-	previewtext:Center()
-	
-	local submitButton = vgui.Create("DButton", frame)	
-	submitButton:SetText("Submit Request")
-	submitButton:SetWidth(100)
-	submitButton:SetPos(5, 162)
-	
-	-- functions
-	submitButton.DoClick = function()
-		local color = colormixer:GetColor()
-		RunConsoleCommand("ulx", "requesttag", contentbox:GetValue(), color.r, color.g, color.b)
-		frame:Remove()
-	end
-	
-	colormixer.ValueChanged = function(self, color)
-		previewtext:SetColor(color)
-	end
-	
-	contentbox.OnTextChanged = function(self)
-		previewtext:SetText(contentbox:GetValue())
-		previewtext:SizeToContents()
-		previewtext:Center()
-	end
-	
-	frame:MakePopup()
-end
-
-function ulx.showNameTagDialog(target_ply)
-	if ulx.nameTags[target_ply:SteamID()] and ulx.nameTags[target_ply:SteamID()].rainbow then
-		Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
-		return
-	end
-	
-	local steamID = target_ply:SteamID()
-	local w,h = 250,189
-	
-	local frame = vgui.Create("DFrame")
-	frame:SetSize(w, h)
-	frame:SetTitle(Format("Set %s's Name Tag", target_ply:Nick()))
-	frame:Center()
-	
-	local contentbox = vgui.Create("DTextEntry", frame)
-	if ulx.nameTags[steamID] then
-		contentbox:SetValue(ulx.nameTags[steamID].content)
-	end
-	contentbox:StretchToParent(5, 30, 5, 0)
-	contentbox:SetTall(25)
-	
-	local colormixer = vgui.Create("DColorMixer", frame)
-	if ulx.nameTags[steamID] then
-		colormixer:SetColor(ulx.nameTags[steamID].color)
-	end
-	colormixer:SetWangs(true)
-	colormixer:SetAlphaBar(false)
-	colormixer:SetPalette(false)
-	colormixer:StretchToParent(5, 60, 5, 0)
-	colormixer:SetTall(68)
-	
-	local previewpanel = vgui.Create("DPanel", frame)
-	previewpanel:SetBackgroundColor(Color(0, 0, 0))
-	previewpanel:StretchToParent(5, 133, 5, 0)
-	previewpanel:SetTall(24)
-	
-	local previewtext = vgui.Create("DLabel", previewpanel)
-	previewtext:SetFont("treb_small")
-	if ulx.nameTags[steamID] then
-		previewtext:SetText(ulx.nameTags[steamID].content)	
-		previewtext:SetColor(ulx.nameTags[steamID].color)
-	else
-		previewtext:SetText("")
-	end
-	previewtext:SizeToContents()
-	previewtext:Center()
-	
-	local submitButton = vgui.Create("DButton", frame)	
-	submitButton:SetText("Set Tag")
-	submitButton:SetWidth(100)
-	submitButton:SetPos(5, 162)
-	
-	-- functions
-	
-	submitButton.DoClick = function()
-		local color = colormixer:GetColor()
-		RunConsoleCommand("ulx", "tag", target_ply:Nick(), contentbox:GetValue(), color.r, color.g, color.b)
-		frame:Remove()
-	end
-	
-	colormixer.ValueChanged = function(self, color)
-		previewtext:SetColor(color)
-	end
-	
-	contentbox.OnTextChanged = function(self)
-		previewtext:SetText(contentbox:GetValue())
-		previewtext:SizeToContents()
-		previewtext:Center()
-	end
-	
-	frame:MakePopup()
-end
-
 -------------
 --- HOOKS ---
 -------------
-
--- "Borrowed" function from EZRanks
-local function rainbow()
-	local red = math.sin(.5 * RealTime()) * 127 + 128
-	local green = math.sin(.5 * RealTime() + 2) * 127 + 128
-	local blue = math.sin(.5 * RealTime() + 4) * 127 + 128
-	return Color(red, green, blue)
-end
-
 function ulx.createNametagRainbow(lbl, parent)
 	lbl.rainbowCreated = true
 	
@@ -297,3 +163,135 @@ local function addMenuOption(menu)
 	end
 end
 hook.Add("SQCMenu", "NameTagsOption", addMenuOption)
+
+--------------------------
+--- Scoreboard Dialogs ---
+--------------------------
+function ulx.showNameTagRequestDialog()
+	local w,h = 250,189
+	
+	local frame = vgui.Create("DFrame")
+	frame:SetSize(w, h)
+	frame:SetTitle("Name Tag Change Request")
+	frame:Center()
+	
+	local contentbox = vgui.Create("DTextEntry", frame)
+	contentbox:SetValue(ulx.nameTags[LocalPlayer():SteamID()].content)
+	contentbox:StretchToParent(5, 30, 5, 0)
+	contentbox:SetTall(25)
+	
+	local colormixer = vgui.Create("DColorMixer", frame)
+	colormixer:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
+	colormixer:SetWangs(true)
+	colormixer:SetAlphaBar(false)
+	colormixer:SetPalette(false)
+	colormixer:StretchToParent(5, 60, 5, 0)
+	colormixer:SetTall(68)
+	
+	local previewpanel = vgui.Create("DPanel", frame)
+	previewpanel:SetBackgroundColor(Color(0, 0, 0))
+	previewpanel:StretchToParent(5, 133, 5, 0)
+	previewpanel:SetTall(24)
+	
+	local previewtext = vgui.Create("DLabel", previewpanel)
+	previewtext:SetFont("treb_small")
+	previewtext:SetText(ulx.nameTags[LocalPlayer():SteamID()].content)	
+	previewtext:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)	
+	previewtext:SizeToContents()
+	previewtext:Center()
+	
+	
+	local submitButton = vgui.Create("DButton", frame)	
+	submitButton:SetText("Submit Request")
+	submitButton:SetWidth(100)
+	submitButton:SetPos(5, 162)
+	
+	submitButton.DoClick = function()
+		local color = colormixer:GetColor()
+		RunConsoleCommand("ulx", "requesttag", contentbox:GetValue(), color.r, color.g, color.b)
+		frame:Remove()
+	end
+	
+	colormixer.ValueChanged = function(self, color)
+		previewtext:SetColor(color)
+	end
+	
+	contentbox.OnTextChanged = function(self)
+		previewtext:SetText(contentbox:GetValue())
+		previewtext:SizeToContents()
+		previewtext:Center()
+	end
+	
+	frame:MakePopup()
+end
+
+function ulx.showNameTagDialog(target_ply)
+	if ulx.nameTags[target_ply:SteamID()] and ulx.nameTags[target_ply:SteamID()].rainbow then
+		Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
+		return
+	end
+	
+	local steamID = target_ply:SteamID()
+	local w,h = 250,189
+	
+	local frame = vgui.Create("DFrame")
+	frame:SetSize(w, h)
+	frame:SetTitle(Format("Set %s's Name Tag", target_ply:Nick()))
+	frame:Center()
+	
+	local contentbox = vgui.Create("DTextEntry", frame)
+	if ulx.nameTags[steamID] then
+		contentbox:SetValue(ulx.nameTags[steamID].content)
+	end
+	contentbox:StretchToParent(5, 30, 5, 0)
+	contentbox:SetTall(25)
+	
+	local colormixer = vgui.Create("DColorMixer", frame)
+	if ulx.nameTags[steamID] then
+		colormixer:SetColor(ulx.nameTags[steamID].color)
+	end
+	colormixer:SetWangs(true)
+	colormixer:SetAlphaBar(false)
+	colormixer:SetPalette(false)
+	colormixer:StretchToParent(5, 60, 5, 0)
+	colormixer:SetTall(68)
+	
+	local previewpanel = vgui.Create("DPanel", frame)
+	previewpanel:SetBackgroundColor(Color(0, 0, 0))
+	previewpanel:StretchToParent(5, 133, 5, 0)
+	previewpanel:SetTall(24)
+	
+	local previewtext = vgui.Create("DLabel", previewpanel)
+	previewtext:SetFont("treb_small")
+	if ulx.nameTags[steamID] then
+		previewtext:SetText(ulx.nameTags[steamID].content)	
+		previewtext:SetColor(ulx.nameTags[steamID].color)
+	else
+		previewtext:SetText("")
+	end
+	previewtext:SizeToContents()
+	previewtext:Center()
+	
+	local submitButton = vgui.Create("DButton", frame)	
+	submitButton:SetText("Set Tag")
+	submitButton:SetWidth(100)
+	submitButton:SetPos(5, 162)
+
+	submitButton.DoClick = function()
+		local color = colormixer:GetColor()
+		RunConsoleCommand("ulx", "tag", target_ply:Nick(), contentbox:GetValue(), color.r, color.g, color.b)
+		frame:Remove()
+	end
+	
+	colormixer.ValueChanged = function(self, color)
+		previewtext:SetColor(color)
+	end
+	
+	contentbox.OnTextChanged = function(self)
+		previewtext:SetText(contentbox:GetValue())
+		previewtext:SizeToContents()
+		previewtext:Center()
+	end
+	
+	frame:MakePopup()
+end

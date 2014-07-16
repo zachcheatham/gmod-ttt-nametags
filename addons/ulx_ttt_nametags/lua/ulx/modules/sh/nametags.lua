@@ -1,6 +1,13 @@
+---------------
+--- Defines ---
+---------------
 local CATEGORY_NAME = "Name Tags"
-local NameTagNotificationStatus = {APPROVED = 0, DENIED = 1}
+local NAMETAG_APPROVED = 0
+local NAMETAG_DENIED = 1
 
+---------------
+--- Helpers ---
+---------------
 local function isOnline(steamID)
 	for k, v in ipairs(player.GetAll()) do
 		if v:SteamID() == steamID then
@@ -11,20 +18,23 @@ local function isOnline(steamID)
 	return false
 end
 
-function ulx.tag(calling_ply, target_ply, content, red, green, blue)
+----------------
+--- Commands ---
+----------------
+function ulx.tag(callingPlayer, targetPlayer, content, red, green, blue)
 	local tag = {content=content, r=red, g=green, b=blue}
 	
-	ulx.connectedNameTags[target_ply:SteamID()] = tag
-	ulx.broadcastNameTag(target_ply:SteamID(), tag)
+	ulx.connectedNameTags[targetPlayer:SteamID()] = tag
+	ulx.broadcastNameTag(targetPlayer:SteamID(), tag)
 	
-	tag.name = target_ply:Nick()
-	ulx.nameTags[target_ply:SteamID()] = tag
+	tag.name = targetPlayer:Nick()
+	ulx.nameTags[targetPlayer:SteamID()] = tag
 	ulx.saveNameTags()
 	
-	ulx.fancyLogAdmin(calling_ply, "#A changed the name tag of #T", target_ply)
+	ulx.fancyLogAdmin(callingPlayer, "#A changed the name tag of #T", targetPlayer)
 
 	local t = {}
-	t[target_ply:SteamID()] = tag
+	t[targetPlayer:SteamID()] = tag
 	xgui.addData({}, "nametags", t)
 end
 
@@ -37,7 +47,7 @@ tag:addParam{type=ULib.cmds.NumArg, max=255, min=0, default=255, hint="blue"}
 tag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 tag:help("Sets the target's name tag.")
 
-function ulx.tagid(calling_ply, steamID, content, red, green, blue)
+function ulx.tagid(callingPlayer, steamID, content, red, green, blue)
 	local name
 	steamID = steamID:upper()
 	
@@ -58,7 +68,7 @@ function ulx.tagid(calling_ply, steamID, content, red, green, blue)
 	ulx.nameTags[steamID] = tag
 	ulx.saveNameTags()
 	
-	ulx.fancyLogAdmin(calling_ply, "#A changed the name tag of #s", (name and name or steamID))
+	ulx.fancyLogAdmin(callingPlayer, "#A changed the name tag of #s", (name and name or steamID))
 	
 	local t = {}
 	t[steamID] = tag
@@ -74,14 +84,14 @@ tagid:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="blue"}
 tagid:defaultAccess(ULib.ACCESS_SUPERADMIN)
 tagid:help("Sets a name tag by Steam ID.")
 
-function ulx.removetag(calling_ply, target_ply)
-	ulx.nameTags[target_ply:SteamID()] = nil
-	ulx.connectedNameTags[target_ply:SteamID()] = nil
-	ulx.broadcastNameTag(target_ply:SteamID(), nil)
-	ulx.fancyLogAdmin(calling_ply, "#A removed #T's name tag", target_ply)
+function ulx.removetag(callingPlayer, targetPlayer)
+	ulx.nameTags[targetPlayer:SteamID()] = nil
+	ulx.connectedNameTags[targetPlayer:SteamID()] = nil
+	ulx.broadcastNameTag(targetPlayer:SteamID(), nil)
+	ulx.fancyLogAdmin(callingPlayer, "#A removed #T's name tag", targetPlayer)
 	ulx.saveNameTags()
 	
-	xgui.removeData({}, "nametags", {target_ply:SteamID()})
+	xgui.removeData({}, "nametags", {targetPlayer:SteamID()})
 end
 
 local removetag = ulx.command(CATEGORY_NAME, "ulx removetag", ulx.removetag, "!removetag")
@@ -89,7 +99,7 @@ removetag:addParam{type=ULib.cmds.PlayerArg}
 removetag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 removetag:help("Removes the target's name tag.")
 
-function ulx.removetagid(calling_ply, steamID)
+function ulx.removetagid(callingPlayer, steamID)
 	steamID = steamID:upper()
 
 	ulx.nameTags[steamID] = nil
@@ -97,9 +107,9 @@ function ulx.removetagid(calling_ply, steamID)
 	ulx.broadcastNameTag(steamID, nil)
 	
 	if ULib.ucl.users[steamID] and ULib.ucl.users[steamID].name then
-		ulx.fancyLogAdmin(calling_ply, "#A removed #s's name tag", ULib.ucl.users[steamID].name)
+		ulx.fancyLogAdmin(callingPlayer, "#A removed #s's name tag", ULib.ucl.users[steamID].name)
 	else
-		ulx.fancyLogAdmin(calling_ply, "#A removed the name tag from #s", steamID)
+		ulx.fancyLogAdmin(callingPlayer, "#A removed the name tag from #s", steamID)
 	end
 	
 	ulx.saveNameTags()
@@ -112,9 +122,9 @@ removetagid:addParam{type=ULib.cmds.StringArg, hint="SteamID"}
 removetagid:defaultAccess(ULib.ACCESS_SUPERADMIN)
 removetagid:help("Removes a name tag by Steam ID.")
 
-function ulx.grouptag(calling_ply, group, content, red, green, blue)
+function ulx.grouptag(callingPlayer, group, content, red, green, blue)
 	if not ULib.ucl.groups[group] then
-		ULib.tsayError(calling_ply, "That is not a valid group")
+		ULib.tsayError(callingPlayer, "That is not a valid group")
 		return
 	end
 	
@@ -124,7 +134,7 @@ function ulx.grouptag(calling_ply, group, content, red, green, blue)
 	ulx.broadcastNameTag(group, ulx.groupNameTags[group])
 	ulx.saveGroupNameTags()
 	
-	ulx.fancyLogAdmin(calling_ply, "#A set the group name tag of #s.", group)
+	ulx.fancyLogAdmin(callingPlayer, "#A set the group name tag of #s.", group)
 	
 	local t = {}
 	t[group] = tag
@@ -140,12 +150,12 @@ grouptag:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="blue"}
 grouptag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 grouptag:help("Sets a group's name tag.")
 
-function ulx.removegrouptag(calling_ply, group)
+function ulx.removegrouptag(callingPlayer, group)
 	ulx.nameTags[group] = nil
 	ulx.connectedNameTags[group] = nil
 	ulx.broadcastNameTag(group, nil)
 	
-	ulx.fancyLogAdmin(calling_ply, "#A removed the group name tag from #s", group)
+	ulx.fancyLogAdmin(callingPlayer, "#A removed the group name tag from #s", group)
 	
 	ulx.saveGroupNameTags()
 	
@@ -157,7 +167,7 @@ removegrouptag:addParam{type=ULib.cmds.StringArg, hint="group"}
 removegrouptag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 removegrouptag:help("Removes a name tag from a group.")
 
-function ulx.approvetag(calling_ply, steamID)
+function ulx.approvetag(callingPlayer, steamID)
 	local request = ulx.nameTagRequests[steamID]
 	
 	if request then
@@ -188,7 +198,7 @@ function ulx.approvetag(calling_ply, steamID)
 		
 		-- Query a notification to the player if he's not here to see his nametag get approved
 		if not online then
-			ulx.nameTagNotifications[steamID] = NameTagNotificationStatus.APPROVED
+			ulx.nameTagNotifications[steamID] = NAMETAG_APPROVED
 			ulx.saveNameTagNotifications()
 		end
 		
@@ -203,9 +213,9 @@ function ulx.approvetag(calling_ply, steamID)
 		xgui.addData({}, "nametags", t)
 		
 		-- Announce
-		ulx.fancyLogAdmin(calling_ply, "#A approved #s's new name tag.", name or steamID)
+		ulx.fancyLogAdmin(callingPlayer, "#A approved #s's new name tag.", name or steamID)
 	else
-		ULib.tsayError(calling_ply, "That Steam ID doesn't have a pending name tag request.")
+		ULib.tsayError(callingPlayer, "That Steam ID doesn't have a pending name tag request.")
 	end
 end
 
@@ -214,7 +224,7 @@ approvetag:addParam{type=ULib.cmds.StringArg, hint="Steam ID"}
 approvetag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 approvetag:help("Approves a player's name tag request.")
 
-function ulx.denytag(calling_ply, steamID)
+function ulx.denytag(callingPlayer, steamID)
 	local request = ulx.nameTagRequests[steamID]
 	if request then
 		ulx.nameTagRequests[steamID] = nil
@@ -222,7 +232,7 @@ function ulx.denytag(calling_ply, steamID)
 		
 		-- Queue a notification
 		if not isOnline(steamID) then
-			ulx.nameTagNotifications[steamID] = NameTagNotificationStatus.DENIED
+			ulx.nameTagNotifications[steamID] = NAMETAG_DENIED
 			ulx.saveNameTagNotifications()
 		end
 		
@@ -231,12 +241,12 @@ function ulx.denytag(calling_ply, steamID)
 		
 		-- Announce
 		if ULib.ucl.users[steamID] and ULib.ucl.users[steamID].name then
-			ulx.fancyLogAdmin(calling_ply, "#A denied #s's name tag request.", ULib.ucl.users[steamID].name)
+			ulx.fancyLogAdmin(callingPlayer, "#A denied #s's name tag request.", ULib.ucl.users[steamID].name)
 		else
-			ulx.fancyLogAdmin(calling_ply, "#A denied #s's name tag request.", steamID)
+			ulx.fancyLogAdmin(callingPlayer, "#A denied #s's name tag request.", steamID)
 		end
 	else
-		ULib.tsayError(calling_ply, "That Steam ID doesn't have a pending name tag request.")
+		ULib.tsayError(callingPlayer, "That Steam ID doesn't have a pending name tag request.")
 	end
 end
 
@@ -245,26 +255,26 @@ denytag:addParam{type=ULib.cmds.StringArg, hint="Steam ID"}
 denytag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 denytag:help("Denies a player's name tag request.")
 
-function ulx.requesttag(calling_ply, content, red, green, blue)
-	if not calling_ply.SteamID then ULib.tsayError(calling_ply, "Only players can use this command.") return end
+function ulx.requesttag(callingPlayer, content, red, green, blue)
+	if not callingPlayer.SteamID then ULib.tsayError(callingPlayer, "Only players can use this command.") return end
 	
-	if ulx.nameTags[calling_ply:SteamID()] then	
-		local exists = (ulx.nameTagRequests[calling_ply:SteamID()] and true or false)
+	if ulx.nameTags[callingPlayer:SteamID()] then	
+		local exists = (ulx.nameTagRequests[callingPlayer:SteamID()] and true or false)
 		
-		ulx.nameTagRequests[calling_ply:SteamID()] = {name=calling_ply:Nick(), content=content, r=red, g=green, b=blue, new=false}
+		ulx.nameTagRequests[callingPlayer:SteamID()] = {name=callingPlayer:Nick(), content=content, r=red, g=green, b=blue, new=false}
 		ulx.saveNameTagRequests()
 		
 		if exists then
-			ULib.tsay(calling_ply, "Your name tag request has been updated.")
+			ULib.tsay(callingPlayer, "Your name tag request has been updated.")
 		else
-			ULib.tsay(calling_ply, "Your name tag request has been submitted.")
+			ULib.tsay(callingPlayer, "Your name tag request has been submitted.")
 		end
 		
 		local t = {}
-		t[calling_ply:SteamID()] = ulx.nameTagRequests[calling_ply:SteamID()]
+		t[callingPlayer:SteamID()] = ulx.nameTagRequests[callingPlayer:SteamID()]
 		xgui.addData({}, "nametagrequests", t)
 	else
-		ULib.tsayError(calling_ply, "You may only request a tag if you have an existing one.")
+		ULib.tsayError(callingPlayer, "You may only request a tag if you have an existing one.")
 	end
 end
 
@@ -276,9 +286,9 @@ requesttag:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="blue"}
 requesttag:defaultAccess(ULib.ACCESS_ALL)
 requesttag:help("Request a name tag.")
 
-function ulx.addtagrequest(calling_ply, steamID, content, red, green, blue)
+function ulx.addtagrequest(callingPlayer, steamID, content, red, green, blue)
 	if not ULib.isValidSteamID(steamID) then
-		ULib.tsayError(calling_ply, "That is not a valid Steam ID")
+		ULib.tsayError(callingPlayer, "That is not a valid Steam ID")
 		return
 	end
 
@@ -303,7 +313,7 @@ function ulx.addtagrequest(calling_ply, steamID, content, red, green, blue)
 	
 	ulx.saveNameTagRequests()
 	
-	ULib.tsay(calling_ply, "Request submitted.")
+	ULib.tsay(callingPlayer, "Request submitted.")
 	
 	local t = {}
 	t[steamID] = ulx.nameTagRequests[steamID]

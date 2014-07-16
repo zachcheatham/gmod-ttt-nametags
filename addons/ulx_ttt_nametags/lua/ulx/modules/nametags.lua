@@ -1,16 +1,16 @@
+---------------
+--- Defines ---
+---------------
 local NAMETAG_FILE = "data/ulx/nametags.txt"
 local NAMETAG_GROUPS_FILE = "data/ulx/nametags_groups.txt"
 local NAMETAG_REQUEST_FILE = "data/ulx/nametag_requests.txt"
 local NAMETAG_NOTIFICATIONS_FILE = "data/ulx/nametag_notifications.txt"
+local NAMETAG_APPROVED = 0
+local NAMETAG_DENIED = 1
 
-ulx.nameTags = {}
-ulx.connectedNameTags = {}
-ulx.groupNameTags = {}
-ulx.nameTagRequests = {}
-ulx.nameTagNotifications = {}
-
-local NameTagNotificationStatus = {APPROVED = 0, DENIED = 1}
-
+---------------
+--- Helpers ---
+---------------
 local function isOnline(steamID)
 	for k, v in ipairs(player.GetAll()) do
 		if v:SteamID() == steamID then
@@ -20,6 +20,15 @@ local function isOnline(steamID)
 	
 	return false
 end
+
+----------------------
+--- Data Functions ---
+----------------------
+ulx.nameTags = {}
+ulx.connectedNameTags = {}
+ulx.groupNameTags = {}
+ulx.nameTagRequests = {}
+ulx.nameTagNotifications = {}
 
 local function reloadTags()
 	-- Read files
@@ -64,9 +73,8 @@ local function reloadTags()
 	
 	-- Tell everyone the current tags
 	ulx.broadcastNameTags()
-	
-	-- TODO: Figure out how to completely refresh the xgui data
 end
+reloadTags()
 
 function ulx.saveNameTags()
 	ULib.fileWrite(NAMETAG_FILE, ULib.makeKeyValues(ulx.nameTags))
@@ -92,10 +100,10 @@ function ulx.broadcastNameTags()
 end
 
 -- Send name tag to all players
-function ulx.broadcastNameTag(id, nametag, ply_exempt)
+function ulx.broadcastNameTag(id, nameTag, exempt)
 	for i,ply in ipairs(player.GetAll()) do
-		if ply ~= ply_exempt then
-			ULib.clientRPC(_, "ulx.updateNameTag", id, nametag)
+		if ply ~= exempt then
+			ULib.clientRPC(_, "ulx.updateNameTag", id, nameTag)
 		end
 	end
 end
@@ -107,70 +115,71 @@ function ulx.sendNameTags(ply)
 	end
 end
 
--- Hooks
-
-hook.Add("PlayerInitialSpawn", "loadNameTags", function(ply)
-	local steamid = ply:SteamID()
+-------------
+--- Hooks ---
+-------------
+local function loadNameTags(ply)
+	local steamID = ply:steamID()
 	
-	if ulx.nameTags[steamid] then	
+	if ulx.nameTags[steamID] then	
 		-- Associate a name with the name tag if we don't have one
-		if not ulx.nameTags[steamid].name then
-			ulx.nameTags[steamid].name = ply:Nick()
+		if not ulx.nameTags[steamID].name then
+			ulx.nameTags[steamID].name = ply:Nick()
 			ulx.saveNameTags()
 			
 			-- Inform XGUI
 			local t = {}
-			t[steamid] = ulx.nameTags[steamid]
+			t[steamID] = ulx.nameTags[steamID]
 			xgui.addData({}, "nametags", t)
 		end
 		
 		-- Copy table into connected nametags
-		ulx.connectedNameTags[steamid] = {content=ulx.nameTags[steamid].content}
-		if ulx.nameTags[steamid].rainbow then
-			ulx.connectedNameTags[steamid].rainbow = true
+		ulx.connectedNameTags[steamID] = {content=ulx.nameTags[steamID].content}
+		if ulx.nameTags[steamID].rainbow then
+			ulx.connectedNameTags[steamID].rainbow = true
 		else
-			ulx.connectedNameTags[steamid].r = ulx.nameTags[steamid].r
-			ulx.connectedNameTags[steamid].g = ulx.nameTags[steamid].g
-			ulx.connectedNameTags[steamid].b = ulx.nameTags[steamid].b
+			ulx.connectedNameTags[steamID].r = ulx.nameTags[steamID].r
+			ulx.connectedNameTags[steamID].g = ulx.nameTags[steamID].g
+			ulx.connectedNameTags[steamID].b = ulx.nameTags[steamID].b
 		end
 		
 		-- Broadcast
-		ulx.broadcastNameTag(steamid, ulx.connectedNameTags[steamid], ply)	-- Inform everyone that a new name tag has connected
+		ulx.broadcastNameTag(steamID, ulx.connectedNameTags[steamID], ply)	-- Inform everyone that a new name tag has connected
 	end
 	
 	-- Send new player all connected name tags
 	ulx.sendNameTags(ply)
 	
-	if ulx.nameTagRequests[steamid] then
+	-- Player has a pending tag request
+	if ulx.nameTagRequests[steamID] then
 		-- Associate a name with the request if we don't have one
-		if not ulx.nameTagRequests[steamid] then
-			ulx.nameTagRequests[steamid]["name"] = ply:Nick()
+		if not ulx.nameTagRequests[steamID] then
+			ulx.nameTagRequests[steamID]["name"] = ply:Nick()
 			ulx.saveNameTagRequests()
 			
 			-- Inform XGUI
 			local t = {}
-			t[steamid] = ulx.nameTagRequests[steamid]
+			t[steamID] = ulx.nameTagRequests[steamID]
 			xgui.addData({}, "nametagrequests", t)
 		end
 		
 		-- Notify that his tag is still pending approval
 		ULib.tsay(ply, "[Notice] Your name tag request is pending approval.")
-	elseif ulx.nameTagNotifications[steamid] then
-		if ulx.nameTagNotifications[steamid] == NameTagNotificationStatus.APPROVED then
+	-- Notify player of things that happened while they were away
+	elseif ulx.nameTagNotifications[steamID] then
+		if ulx.nameTagNotifications[steamID] == NAMETAG_APPROVED then
 			ULib.tsay(ply, "[Notice] Your name tag has been approved!")
-		elseif ulx.nameTagNotifications[steamid] == NameTagNotificationStatus.DENIED then
+		elseif ulx.nameTagNotifications[steamID] == NAMETAG_DENIED then
 			ULib.tsay(ply, "[Notice] Your name tag has been denied.")
 		end
 		
-		ulx.nameTagNotifications[steamid] = nil
+		ulx.nameTagNotifications[steamID] = nil
 		ulx.saveNameTagNotifications()
 	end
-end)
+end
+hook.Add("PlayerInitialSpawn", "loadNameTags", loadNameTags)
 
-hook.Add("PlayerDisconnected", "unloadNameTag", function(ply)
+local function unloadNameTag(ply)
 	ulx.connectedNameTags[ply:SteamID()] = nil
-end)
-
--- Run
-
-reloadTags()
+end
+hook.Add("PlayerDisconnected", "unloadNameTag", unloadNameTag)

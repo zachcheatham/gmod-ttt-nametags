@@ -1,4 +1,5 @@
 local CATEGORY_NAME = "Name Tags"
+local NameTagNotificationStatus = {APPROVED = 0, DENIED = 1}
 
 local function isOnline(steamID)
 	for k, v in ipairs(player.GetAll()) do
@@ -187,7 +188,7 @@ function ulx.approvetag(calling_ply, steamID)
 		
 		-- Query a notification to the player if he's not here to see his nametag get approved
 		if not online then
-			ulx.nameTagNotifications[steamID] = ulx.NameTagNotificationStatus.APPROVED
+			ulx.nameTagNotifications[steamID] = NameTagNotificationStatus.APPROVED
 			ulx.saveNameTagNotifications()
 		end
 		
@@ -221,7 +222,7 @@ function ulx.denytag(calling_ply, steamID)
 		
 		-- Queue a notification
 		if not isOnline(steamID) then
-			ulx.nameTagNotifications[steamID] = ulx.NameTagNotificationStatus.DENIED
+			ulx.nameTagNotifications[steamID] = NameTagNotificationStatus.DENIED
 			ulx.saveNameTagNotifications()
 		end
 		

@@ -16,8 +16,6 @@ function ulx.populateNameTags(tags)
 		
 		ulx.nameTags[steamid] = tag
 	end
-	
-	--if update then sboard_panel:UpdateScoreboard(true) end
 end
 
 function ulx.updateNameTag(steamid, tag)
@@ -38,15 +36,13 @@ function ulx.updateNameTag(steamid, tag)
 	else
 		ulx.nameTags[steamid] = nil
 	end
-	
-	 --sboard_panel:UpdateScoreboard(true)
 end
 
 ---------------------------------
 --- Scoreboard Quick Commands ---
 ---------------------------------
 
-function ulx.showNameTagScoreboardWindow()
+function ulx.showNameTagRequestDialog()
 	local w,h = 250,189
 	
 	local frame = vgui.Create("DFrame")
@@ -104,7 +100,7 @@ function ulx.showNameTagScoreboardWindow()
 	frame:MakePopup()
 end
 
-function ulx.showNameTagAdminScoreboardWindow(target_ply)
+function ulx.showNameTagDialog(target_ply)
 	if ulx.nameTags[target_ply:SteamID()] and ulx.nameTags[target_ply:SteamID()].rainbow then
 		Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
 		return
@@ -281,17 +277,17 @@ local function colorForPlayer(ply)
 end
 hook.Add("TTTScoreboardColorForPlayer", "TTTNameTagsColor", colorForPlayer)
 
-local function addContextOption(Menu)
+local function addMenuOption(menu)
 	local opt = false
 	if LocalPlayer():query("ulx tag") then
-		Menu:AddSpacer()
-		opt = Menu:AddOption("Change Tag", function()
-			ulx.showNameTagAdminScoreboardWindow(Menu.Player)
+		menu:AddSpacer()
+		opt = menu:AddOption("Change Tag", function()
+			ulx.showNameTagAdminScoreboardWindow(menu.Player)
 		end)
 	elseif ulx.nameTags[LocalPlayer():SteamID()] then
-		Menu:AddSpacer()
-		opt = Menu:AddOption("Request Tag", function()
-			ulx.showNameTagScoreboardWindow(Menu.Player)
+		menu:AddSpacer()
+		opt = menu:AddOption("Request Tag", function()
+			ulx.showNameTagScoreboardWindow(menu.Player)
 		end)
 	end
 	
@@ -300,4 +296,4 @@ local function addContextOption(Menu)
 		opt:SetTextInset(0,0)
 	end
 end
-hook.Add("SQCMenu", "NameTagsOption", addContextOption)
+hook.Add("SQCMenu", "NameTagsOption", addMenuOption)

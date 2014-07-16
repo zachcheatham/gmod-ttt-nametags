@@ -9,7 +9,7 @@ ulx.groupNameTags = {}
 ulx.nameTagRequests = {}
 ulx.nameTagNotifications = {}
 
-ulx.NameTagNotificationStatus = {APPROVED = 0, DENIED = 1}
+local NameTagNotificationStatus = {APPROVED = 0, DENIED = 1}
 
 local function isOnline(steamID)
 	for k, v in ipairs(player.GetAll()) do
@@ -156,9 +156,9 @@ hook.Add("PlayerInitialSpawn", "loadNameTags", function(ply)
 		-- Notify that his tag is still pending approval
 		ULib.tsay(ply, "[Notice] Your name tag request is pending approval.")
 	elseif ulx.nameTagNotifications[steamid] then
-		if ulx.nameTagNotifications[steamid] == ulx.NameTagNotificationStatus.APPROVED then
+		if ulx.nameTagNotifications[steamid] == NameTagNotificationStatus.APPROVED then
 			ULib.tsay(ply, "[Notice] Your name tag has been approved!")
-		elseif ulx.nameTagNotifications[steamid] == ulx.NameTagNotificationStatus.DENIED then
+		elseif ulx.nameTagNotifications[steamid] == NameTagNotificationStatus.DENIED then
 			ULib.tsay(ply, "[Notice] Your name tag has been denied.")
 		end
 		

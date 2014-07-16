@@ -148,12 +148,12 @@ local function addMenuOption(menu)
 	if LocalPlayer():query("ulx tag") then
 		menu:AddSpacer()
 		opt = menu:AddOption("Change Tag", function()
-			ulx.showNameTagAdminScoreboardWindow(menu.Player)
+			ulx.showNameTagDialog(menu.Player)
 		end)
 	elseif ulx.nameTags[LocalPlayer():SteamID()] then
 		menu:AddSpacer()
 		opt = menu:AddOption("Request Tag", function()
-			ulx.showNameTagScoreboardWindow(menu.Player)
+			ulx.showNameTagRequestDialog(menu.Player)
 		end)
 	end
 	
@@ -164,9 +164,9 @@ local function addMenuOption(menu)
 end
 hook.Add("SQCMenu", "NameTagsOption", addMenuOption)
 
---------------------------
---- Scoreboard Dialogs ---
---------------------------
+-------------------	
+--- SQC Dialogs ---
+-------------------
 function ulx.showNameTagRequestDialog()
 	local w,h = 250,189
 	
@@ -181,7 +181,9 @@ function ulx.showNameTagRequestDialog()
 	contentbox:SetTall(25)
 	
 	local colormixer = vgui.Create("DColorMixer", frame)
-	colormixer:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
+	if ulx.nameTags[LocalPlayer():SteamID()].color then
+		colormixer:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
+	end
 	colormixer:SetWangs(true)
 	colormixer:SetAlphaBar(false)
 	colormixer:SetPalette(false)
@@ -195,11 +197,12 @@ function ulx.showNameTagRequestDialog()
 	
 	local previewtext = vgui.Create("DLabel", previewpanel)
 	previewtext:SetFont("treb_small")
-	previewtext:SetText(ulx.nameTags[LocalPlayer():SteamID()].content)	
-	previewtext:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)	
+	previewtext:SetText(ulx.nameTags[LocalPlayer():SteamID()].content)
+	if ulx.nameTags[LocalPlayer():SteamID()].color then
+		previewtext:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
+	end
 	previewtext:SizeToContents()
 	previewtext:Center()
-	
 	
 	local submitButton = vgui.Create("DButton", frame)	
 	submitButton:SetText("Submit Request")
@@ -225,18 +228,18 @@ function ulx.showNameTagRequestDialog()
 	frame:MakePopup()
 end
 
-function ulx.showNameTagDialog(target_ply)
-	if ulx.nameTags[target_ply:SteamID()] and ulx.nameTags[target_ply:SteamID()].rainbow then
+function ulx.showNameTagDialog(targetPlayer)
+	if ulx.nameTags[targetPlayer:SteamID()] and ulx.nameTags[targetPlayer:SteamID()].rainbow then
 		Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
 		return
 	end
 	
-	local steamID = target_ply:SteamID()
+	local steamID = targetPlayer:SteamID()
 	local w,h = 250,189
 	
 	local frame = vgui.Create("DFrame")
 	frame:SetSize(w, h)
-	frame:SetTitle(Format("Set %s's Name Tag", target_ply:Nick()))
+	frame:SetTitle(Format("Set %s's Name Tag", targetPlayer:Nick()))
 	frame:Center()
 	
 	local contentbox = vgui.Create("DTextEntry", frame)
@@ -279,7 +282,7 @@ function ulx.showNameTagDialog(target_ply)
 
 	submitButton.DoClick = function()
 		local color = colormixer:GetColor()
-		RunConsoleCommand("ulx", "tag", target_ply:Nick(), contentbox:GetValue(), color.r, color.g, color.b)
+		RunConsoleCommand("ulx", "tag", targetPlayer:Nick(), contentbox:GetValue(), color.r, color.g, color.b)
 		frame:Remove()
 	end
 	

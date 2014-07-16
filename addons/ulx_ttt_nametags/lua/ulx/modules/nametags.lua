@@ -74,7 +74,6 @@ local function reloadTags()
 	-- Tell everyone the current tags
 	ulx.broadcastNameTags()
 end
-reloadTags()
 
 function ulx.saveNameTags()
 	ULib.fileWrite(NAMETAG_FILE, ULib.makeKeyValues(ulx.nameTags))
@@ -119,7 +118,7 @@ end
 --- Hooks ---
 -------------
 local function loadNameTags(ply)
-	local steamID = ply:steamID()
+	local steamID = ply:SteamID()
 	
 	if ulx.nameTags[steamID] then	
 		-- Associate a name with the name tag if we don't have one
@@ -183,3 +182,8 @@ local function unloadNameTag(ply)
 	ulx.connectedNameTags[ply:SteamID()] = nil
 end
 hook.Add("PlayerDisconnected", "unloadNameTag", unloadNameTag)
+
+---------------
+--- Runtime ---
+---------------
+reloadTags()

@@ -1,7 +1,6 @@
 ------------
--- MAIN
+--- Base ---
 ------------
-
 xgui.prepareDataType("nametags")
 xgui.prepareDataType("groupnametags")
 xgui.prepareDataType("nametagrequests")
@@ -11,10 +10,9 @@ local xnametags = xlib.makepanel{parent=xgui.null}
 xnametags.tabs = xlib.makepropertysheet{ x=-5, y=6, w=600, h=368, parent=xnametags, offloadparent=xgui.null }
 xgui.addModule("Name Tags", xnametags, "icon16/palette.png", "xgui_managenametags")
 
--------------
--- Players --
--------------
-
+---------------
+--- Players ---
+---------------
 xnametags.tags = xlib.makepanel{parent=xgui.null}
 
 xnametags.tags.list = xlib.makelistview{x=5, y=5, w=572, h=295, parent=xnametags.tags}
@@ -24,8 +22,12 @@ xnametags.tags.list:AddColumn("Tag")
 xnametags.tags.list:AddColumn("Color")
 xnametags.tags.list.OnRowRightClick = function(self, id, line)
 	local menu = DermaMenu()
-	menu:AddOption("Change...", function()  
-		xgui.showNameTagEditor(false, line:GetValue(2), xgui.data.nametags[line:GetValue(2)])
+	menu:AddOption("Change...", function()
+		if xgui.data.nametags[line:GetValue(2)].rainbow then
+			Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
+		else
+			xgui.showNameTagEditor(false, line:GetValue(2), xgui.data.nametags[line:GetValue(2)])
+		end
 	end )
 	menu:AddOption("Remove", function()
 		Derma_Query("Are you sure you want to remove " .. tostring(line:GetValue(1)) .. "'s name tag?", "XGUI WARNING", 
@@ -100,10 +102,9 @@ xgui.hookEvent("nametags", "remove", xnametags.removeNameTags)
 
 xnametags.tabs:AddSheet("Players", xnametags.tags, "icon16/user.png", false, false, nil)
 
--------------
--- Groups --
--------------
-
+--------------
+--- Groups ---
+--------------
 xnametags.grouptags = xlib.makepanel{parent=xgui.null}
 
 xnametags.grouptags.list = xlib.makelistview{x=5, y=5, w=572, h=295, parent=xnametags.grouptags}
@@ -112,16 +113,20 @@ xnametags.grouptags.list:AddColumn("Tag")
 xnametags.grouptags.list:AddColumn("Color")
 xnametags.grouptags.list.OnRowRightClick = function(self, id, line)
 	local menu = DermaMenu()
-	menu:AddOption("Change...", function()  
-		xgui.showNameTagEditor(true, line:GetValue(1), xgui.data.groupnametags[line:GetValue(1)])
-	end )
+	menu:AddOption("Change...", function()
+		if xgui.data.groupnametags[line:GetValue(1)].rainbow then
+			Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
+		else
+			xgui.showNameTagEditor(true, line:GetValue(1), xgui.data.groupnametags[line:GetValue(1)])
+		end
+	end)
 	menu:AddOption("Remove", function()
 		Derma_Query("Are you sure you want to remove " .. tostring(line:GetValue(1)) .. "'s tag?", "XGUI WARNING", 
 		"Remove", function()
 			RunConsoleCommand("ulx", "removegrouptag", line:GetValue(1))
 		end,
 		"Cancel", function() end)
-	end )
+	end)
 	menu:Open()
 end
 
@@ -186,10 +191,9 @@ xgui.hookEvent("groupnametags", "remove", xnametags.removeGroupTags)
 
 xnametags.tabs:AddSheet("Groups", xnametags.grouptags, "icon16/group.png", false, false, nil)
 
-------------
--- APPROVALS
-------------
-
+-----------------
+--- Approvals ---
+-----------------
 xnametags.approvallist = xlib.makepanel{parent=xgui.null}
 
 xnametags.approvallist.list = xlib.makelistview{x=5, y=5, w=400, h=310, parent=xnametags.approvallist}
@@ -297,10 +301,9 @@ xgui.hookEvent("nametagrequests", "remove", xnametags.removeNameTagRequests)
 
 xnametags.tabs:AddSheet("Pending Approval", xnametags.approvallist, "icon16/application_view_list.png", false, false, nil)
 
-------------------
--- Misc ----------
-------------------
-
+---------------
+--- Dialogs ---
+---------------
 function xgui.showNameTagEditor(group, id, tag)
 	local window = xlib.makeframe{label=(id and (group and "Change Group Tag" or "Change Name Tag") or (group and "Add Group Tag" or "Add Name Tag")), w=250, h=(id and 273 or 298), skin=xgui.settings.skin}
 	local ystart = 25
@@ -337,10 +340,8 @@ function xgui.showNameTagEditor(group, id, tag)
 	
 	local colorLabel = xlib.makelabel{x=5, y=ystart+30, label="Color:", parent=window}	
 	local colorPicker = xlib.makecolorpicker{x=5, y=ystart+47, parent=window}
-	if id and not tag.rainbow then
+	if id then
 		colorPicker:SetColor(Color(tag.r, tag.g, tag.b))
-	elseif id and tag.rainbow then
-		colorPicker:SetDisabled(true)
 	end
 	colorPicker:SetWidth(240)
 	colorPicker:SetHeight(125)
@@ -352,23 +353,6 @@ function xgui.showNameTagEditor(group, id, tag)
 	colorPicker.txtB:SetPos(80,105)
 	colorPicker:SetDrawBackground(false)
 	
-	if id and tag.rainbow then
-		local rainbowCheckbox = xlib.makecheckbox{x=179, y=ystart+154, w=50, label="Rainbow", parent=window}
-		rainbowCheckbox:SetChecked(true)
-		rainbowCheckbox:SetDisabled(true)
-		
-		rainbowCheckbox.OnChange = function(self)
-			if self:GetChecked() then
-				colorPicker:SetDisabled(true)
-				ulx.createNametagRainbow(previewText)
-			else
-				colorPicker:SetDisabled(false)
-				ulx.removeNametagRainbow(previewText)
-				previewText:SetColor(colorPicker:GetColor())
-			end
-		end
-	end
-	
 	local previewLabel = xlib.makelabel{x=5, y=ystart+177, label="Preview:", parent=window}
 	local previewPanel = xlib.makepanel{x=5, y=ystart+194, w=240, h=24, parent=window}
 	previewPanel:SetBackgroundColor(Color(0,0,0))
@@ -379,12 +363,7 @@ function xgui.showNameTagEditor(group, id, tag)
 		previewText:SetText(tag.content)
 		previewText:SizeToContents()
 		previewText:Center()
-		
-		if not tag.rainbow then
-			previewText:SetColor(Color(tag.r, tag.g, tag.b))
-		else
-			ulx.createNametagRainbow(previewText)
-		end
+		previewText:SetColor(Color(tag.r, tag.g, tag.b))
 	end
 	
 	contentBox.OnTextChanged = function(self)
@@ -412,12 +391,8 @@ function xgui.showNameTagEditor(group, id, tag)
 				end
 			end
 		
-			if rainbowCheckbox:GetChecked() then
-				RunConsoleCommand("ulx", (group and "grouptag" or "tagid"), id or idBox:GetValue(), contentBox:GetText(), 1)
-			else
-				local color = colorPicker:GetColor()
-				RunConsoleCommand("ulx", (group and "grouptag" or "tagid"), id or idBox:GetValue(), contentBox:GetText(), 0, color.r, color.g, color.b)
-			end
+			local color = colorPicker:GetColor()
+			RunConsoleCommand("ulx", (group and "grouptag" or "tagid"), id or idBox:GetValue(), contentBox:GetText(), 0, color.r, color.g, color.b)
 			window:Remove()
 		else
 			Derma_Query("Please fill in all the text boxes.", "Incomplete.", "Okay", function() end)

@@ -151,7 +151,7 @@ grouptag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 grouptag:help("Sets a group's name tag.")
 
 function ulx.removegrouptag(callingPlayer, group)
-	ulx.nameTags[group] = nil
+	ulx.groupNameTags[group] = nil
 	ulx.connectedNameTags[group] = nil
 	ulx.broadcastNameTag(group, nil)
 	

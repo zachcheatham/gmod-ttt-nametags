@@ -392,7 +392,7 @@ function xgui.showNameTagEditor(group, id, tag)
 			end
 		
 			local color = colorPicker:GetColor()
-			RunConsoleCommand("ulx", (group and "grouptag" or "tagid"), id or idBox:GetValue(), contentBox:GetText(), 0, color.r, color.g, color.b)
+			RunConsoleCommand("ulx", (group and "grouptag" or "tagid"), id or idBox:GetValue(), contentBox:GetText(), color.r, color.g, color.b)
 			window:Remove()
 		else
 			Derma_Query("Please fill in all the text boxes.", "Incomplete.", "Okay", function() end)

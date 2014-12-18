@@ -32,10 +32,10 @@ ulx.nameTagNotifications = {}
 
 local function reloadTags()
 	-- Read files
-	ulx.nameTags = ULib.parseKeyValues(ULib.removeCommentHeader(ULib.fileRead(NAMETAG_FILE), "/" ))
-	ulx.groupNameTags = ULib.parseKeyValues(ULib.removeCommentHeader(ULib.fileRead(NAMETAG_GROUPS_FILE), "/" ))
-	ulx.nameTagRequests = ULib.parseKeyValues(ULib.removeCommentHeader(ULib.fileRead(NAMETAG_REQUEST_FILE), "/" ))
-	ulx.nameTagNotifications = ULib.parseKeyValues(ULib.removeCommentHeader(ULib.fileRead(NAMETAG_NOTIFICATIONS_FILE), "/" ))
+	ulx.nameTags = ULib.fileExists(NAMETAG_FILE) and ULib.parseKeyValues(ULib.fileRead(NAMETAG_FILE), "/" ) or {}
+	ulx.groupNameTags = ULib.fileExists(NAMETAG_GROUPS_FILE) and ULib.parseKeyValues(ULib.fileRead(NAMETAG_GROUPS_FILE), "/" ) or {}
+	ulx.nameTagRequests =  ULib.fileExists(NAMETAG_REQUEST_FILE) and ULib.parseKeyValues(ULib.fileRead(NAMETAG_REQUEST_FILE), "/" ) or {}
+	ulx.nameTagNotifications = ULib.fileExists(NAMETAG_REQUEST_FILE) and ULib.parseKeyValues(ULib.fileRead(NAMETAG_NOTIFICATIONS_FILE), "/" ) or {}
 	
 	for k, v in pairs(ulx.nameTags) do
 		if not v.rainbow then

@@ -84,6 +84,63 @@ tagid:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="blue"}
 tagid:defaultAccess(ULib.ACCESS_SUPERADMIN)
 tagid:help("Sets a name tag by Steam ID.")
 
+function ulx.rainbowtag(callingPlayer, targetPlayer, content)
+	local tag = {content=content, rainbow=true}
+	
+	ulx.connectedNameTags[targetPlayer:SteamID()] = tag
+	ulx.broadcastNameTag(targetPlayer:SteamID(), tag)
+	
+	tag.name = targetPlayer:Nick()
+	ulx.nameTags[targetPlayer:SteamID()] = tag
+	ulx.saveNameTags()
+	
+	ulx.fancyLogAdmin(callingPlayer, "#A changed the name tag of #T", targetPlayer)
+
+	local t = {}
+	t[targetPlayer:SteamID()] = tag
+	xgui.addData({}, "nametags", t)
+end
+
+local rainbowtag = ulx.command(CATEGORY_NAME, "ulx rainbowtag", ulx.rainbowtag, "!rainbowtag")
+rainbowtag:addParam{type=ULib.cmds.PlayerArg}
+rainbowtag:addParam{type=ULib.cmds.StringArg, hint="content"}
+rainbowtag:defaultAccess(ULib.ACCESS_SUPERADMIN)
+rainbowtag:help("Sets the target's name tag with a rainbow animation.")
+
+function ulx.rainbowtagid(callingPlayer, steamID, content)
+	local name
+	steamID = steamID:upper()
+	
+	if ULib.ucl.users[steamID] and ULib.ucl.users[steamID].name then
+		name = ULib.ucl.users[steamID].name
+	elseif ulx.nameTags[steamID] and ulx.nameTags[steamID].name then
+		name = ulx.nameTags[steamID].name
+	end
+	
+	local tag = {content=content, rainbow=true}
+	
+	if isOnline(steamID) then
+		ulx.connectedNameTags[steamID] = tag
+		ulx.broadcastNameTag(steamID, tag)
+	end
+	
+	if name then tag.name = name end
+	ulx.nameTags[steamID] = tag
+	ulx.saveNameTags()
+	
+	ulx.fancyLogAdmin(callingPlayer, "#A changed the name tag of #s", (name and name or steamID))
+	
+	local t = {}
+	t[steamID] = tag
+	xgui.addData({}, "nametags", t)
+end
+
+local rainbowtagid = ulx.command(CATEGORY_NAME, "ulx rainbowtagid", ulx.rainbowtagid, "!rainbowtagid")
+rainbowtagid:addParam{type=ULib.cmds.StringArg, hint="Steam ID"}
+rainbowtagid:addParam{type=ULib.cmds.StringArg, hint="content"}
+rainbowtagid:defaultAccess(ULib.ACCESS_SUPERADMIN)
+rainbowtagid:help("Sets a name tag by Steam ID with a rainbow animation.")
+
 function ulx.removetag(callingPlayer, targetPlayer)
 	ulx.nameTags[targetPlayer:SteamID()] = nil
 	ulx.connectedNameTags[targetPlayer:SteamID()] = nil
@@ -149,6 +206,31 @@ grouptag:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="green"}
 grouptag:addParam{type=ULib.cmds.NumArg, max=255, min=0, hint="blue"}
 grouptag:defaultAccess(ULib.ACCESS_SUPERADMIN)
 grouptag:help("Sets a group's name tag.")
+
+function ulx.rainbowgrouptag(callingPlayer, group, content)
+	if not ULib.ucl.groups[group] then
+		ULib.tsayError(callingPlayer, "That is not a valid group")
+		return
+	end
+	
+	local tag = {content=content, rainbow=true}
+	
+	ulx.groupNameTags[group] = tag
+	ulx.broadcastNameTag(group, ulx.groupNameTags[group])
+	ulx.saveGroupNameTags()
+	
+	ulx.fancyLogAdmin(callingPlayer, "#A set the group name tag of #s.", group)
+	
+	local t = {}
+	t[group] = tag
+	xgui.addData({}, "groupnametags", t)
+end
+
+local rainbowgrouptag = ulx.command(CATEGORY_NAME, "ulx rainbowgrouptag", ulx.rainbowgrouptag, "!rainbowgrouptag")
+rainbowgrouptag:addParam{type=ULib.cmds.StringArg, hint="group"}
+rainbowgrouptag:addParam{type=ULib.cmds.StringArg, hint="content"}
+rainbowgrouptag:defaultAccess(ULib.ACCESS_SUPERADMIN)
+rainbowgrouptag:help("Sets a group's name tag.")
 
 function ulx.removegrouptag(callingPlayer, group)
 	ulx.groupNameTags[group] = nil

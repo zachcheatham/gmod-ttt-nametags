@@ -54,22 +54,28 @@ end
 function ulx.createNametagRainbow(lbl, parent)
 	lbl.rainbowCreated = true
 	
+	lbl.oldThink = lbl.Think
 	lbl.Think = function(self)
+		lbl.oldThink(self)
 		self:SetTextColor(rainbow())
 	end
 	
 	if parent then
+		parent.nick.oldThink = parent.nick.Think
 		parent.nick.Think = function(self)
+			parent.nick.oldThink(self)
 			self:SetTextColor(rainbow())
 		end
 	end
 end
 
 function ulx.removeNametagRainbow(lbl, parent)
-	lbl.Think = nil
+	lbl.Think = lbl.oldThink
+	lbl.oldThink = nil
 	
 	if parent then
-		parent.nick.Think = nil
+		parent.nick.Think = parent.nick.oldThink
+		parent.nick.oldThink = nil
 	end
 	
 	lbl.rainbowCreated = false
@@ -104,9 +110,7 @@ local function insertColumn(pnl)
 			return ulx.nameTags[ply:GetUserGroup()].content
 		else
 			if lbl.rainbowCreated then
-				pnl.nick.Think = nil
-				lbl.Think = nil
-				lbl.rainbowCreated = false
+				ulx.removeNametagRainbow(lbl, pnl)
 			end
 		end
 		return ""
@@ -127,13 +131,13 @@ hook.Add("TTTScoreboardColumns", "TTTNameTagsColumn", insertColumn)
 local function colorForPlayer(ply)
 	if ulx.nameTags and ulx.nameTags[ply:SteamID()] then
 		if ulx.nameTags[ply:SteamID()].rainbow then
-			return nil
+			return rainbow() -- Return the current rainbow color for the split millisecond TTT updates the color
 		else
 			return ulx.nameTags[ply:SteamID()].color
 		end
 	elseif ulx.nameTags and ulx.nameTags[ply:GetUserGroup()] then
 		if ulx.nameTags[ply:GetUserGroup()].rainbow then
-			return nil
+			return rainbow()  -- Return the current rainbow color for the split millisecond TTT updates the color
 		else
 			return ulx.nameTags[ply:GetUserGroup()].color
 		end

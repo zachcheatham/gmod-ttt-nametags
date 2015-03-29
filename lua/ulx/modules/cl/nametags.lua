@@ -121,8 +121,15 @@ local function insertColumn(pnl)
 		local oldLayoutColumns = pnl.LayoutColumns
 		pnl.LayoutColumns = function(p)
 			oldLayoutColumns(p)
-			pnl.cols[5]:SizeToContents()
-			pnl.cols[5]:SetPos(pnl:GetWide() - (90*5) - pnl.cols[5]:GetWide()/2, (SB_ROW_HEIGHT - pnl.cols[5]:GetTall()) / 2)
+			local col = pnl.cols[5]
+			if not col then
+				col = pnl.cols[4]
+			end
+			
+			if col then
+				col:SizeToContents()
+				col:SetPos(pnl:GetWide() - (90*5) - col:GetWide()/2, (SB_ROW_HEIGHT - col:GetTall()) / 2)
+			end
 		end
 	end
 end

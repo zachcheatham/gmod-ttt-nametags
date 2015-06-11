@@ -109,7 +109,7 @@ end
 
 -- Send only connected name tags to a player
 function ulx.sendNameTags(ply)
-	if table.Count(ulx.nameTags) > 0 then
+	if table.Count(ulx.connectedNameTags) > 0 then
 		ULib.clientRPC(ply, "ulx.populateNameTags", ulx.connectedNameTags)
 	end
 end

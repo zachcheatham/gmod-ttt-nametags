@@ -54,6 +54,7 @@ function xnametags.addNameTagLine(steamID, tag)
 end
 
 function xnametags.clearNameTags()
+	xgui.flushQueue("nametag")
 	xnametags.tags.list:Clear()
 end
 
@@ -145,6 +146,7 @@ function xnametags.addGroupTagLine(group, tag)
 end
 
 function xnametags.clearGroupTags()
+	xgui.flushQueue("grouptag")
 	xnametags.grouptags.list:Clear()
 end
 
@@ -259,6 +261,7 @@ function xnametags.addNameTagRequestLine(steamID, request)
 end
 
 function xnametags.clearNameTagRequests()
+	xgui.flushQueue("nametagrequest")
 	xnametags.approvallist.list:Clear()
 end
 

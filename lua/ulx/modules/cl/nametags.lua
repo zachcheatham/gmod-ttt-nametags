@@ -14,16 +14,16 @@ end
 ----------------------
 function ulx.populateNameTags(tags)
 	ulx.nameTags = {}
-	
+
 	for steamid, tag in pairs(tags) do
 		if tag.r and tag.g and tag.b then
 			tag.color = Color(tag.r, tag.g, tag.b)
 		end
-		
+
 		tag.r = nil
 		tag.g = nil
 		tag.b = nil
-		
+
 		ulx.nameTags[steamid] = tag
 	end
 end
@@ -32,12 +32,12 @@ function ulx.updateNameTag(steamid, tag)
 	if not ulx.nameTags then
 		ulx.nameTags = {}
 	end
-	
+
 	if tag then
 		if tag.r and tag.g and tag.b then
 			tag.color = Color(tag.r, tag.g, tag.b)
 		end
-		
+
 		tag.r = nil
 		tag.g = nil
 		tag.b = nil
@@ -53,13 +53,13 @@ end
 -------------
 function ulx.createNametagRainbow(lbl, parent)
 	lbl.rainbowCreated = true
-	
+
 	lbl.oldThink = lbl.Think
 	lbl.Think = function(self)
 		lbl.oldThink(self)
 		self:SetTextColor(rainbow())
 	end
-	
+
 	if parent then
 		parent.nick.oldThink = parent.nick.Think
 		parent.nick.Think = function(self)
@@ -72,12 +72,12 @@ end
 function ulx.removeNametagRainbow(lbl, parent)
 	lbl.Think = lbl.oldThink
 	lbl.oldThink = nil
-	
+
 	if parent then
 		parent.nick.Think = parent.nick.oldThink
 		parent.nick.oldThink = nil
 	end
-	
+
 	lbl.rainbowCreated = false
 end
 
@@ -115,7 +115,7 @@ local function insertColumn(pnl)
 		end
 		return ""
 	end, 0)
-	
+
 	-- Resize some things
 	if not pnl.ply_groups then
 		local oldLayoutColumns = pnl.LayoutColumns
@@ -125,7 +125,7 @@ local function insertColumn(pnl)
 			if not col then
 				col = pnl.cols[4]
 			end
-			
+
 			if col then
 				col:SizeToContents()
 				col:SetPos(pnl:GetWide() - (90*5) - col:GetWide()/2, (SB_ROW_HEIGHT - col:GetTall()) / 2)
@@ -167,7 +167,7 @@ local function addMenuOption(menu)
 			ulx.showNameTagRequestDialog(menu.Player)
 		end)
 	end
-	
+
 	if opt then
 		opt:SetIcon("icon16/palette.png")
 		opt:SetTextInset(0,0)
@@ -175,22 +175,22 @@ local function addMenuOption(menu)
 end
 hook.Add("SQCMenu", "NameTagsOption", addMenuOption)
 
--------------------	
+-------------------
 --- SQC Dialogs ---
 -------------------
 function ulx.showNameTagRequestDialog()
 	local w,h = 250,189
-	
+
 	local frame = vgui.Create("DFrame")
 	frame:SetSize(w, h)
 	frame:SetTitle("Name Tag Change Request")
 	frame:Center()
-	
+
 	local contentbox = vgui.Create("DTextEntry", frame)
 	contentbox:SetValue(ulx.nameTags[LocalPlayer():SteamID()].content)
 	contentbox:StretchToParent(5, 30, 5, 0)
 	contentbox:SetTall(25)
-	
+
 	local colormixer = vgui.Create("DColorMixer", frame)
 	if ulx.nameTags[LocalPlayer():SteamID()].color then
 		colormixer:SetColor(ulx.nameTags[LocalPlayer():SteamID()].color)
@@ -200,12 +200,12 @@ function ulx.showNameTagRequestDialog()
 	colormixer:SetPalette(false)
 	colormixer:StretchToParent(5, 60, 5, 0)
 	colormixer:SetTall(68)
-	
+
 	local previewpanel = vgui.Create("DPanel", frame)
 	previewpanel:SetBackgroundColor(Color(0, 0, 0))
 	previewpanel:StretchToParent(5, 133, 5, 0)
 	previewpanel:SetTall(24)
-	
+
 	local previewtext = vgui.Create("DLabel", previewpanel)
 	previewtext:SetFont("treb_small")
 	previewtext:SetText(ulx.nameTags[LocalPlayer():SteamID()].content)
@@ -214,28 +214,28 @@ function ulx.showNameTagRequestDialog()
 	end
 	previewtext:SizeToContents()
 	previewtext:Center()
-	
-	local submitButton = vgui.Create("DButton", frame)	
+
+	local submitButton = vgui.Create("DButton", frame)
 	submitButton:SetText("Submit Request")
 	submitButton:SetWidth(100)
 	submitButton:SetPos(5, 162)
-	
+
 	submitButton.DoClick = function()
 		local color = colormixer:GetColor()
 		RunConsoleCommand("ulx", "requesttag", contentbox:GetValue(), color.r, color.g, color.b)
 		frame:Remove()
 	end
-	
+
 	colormixer.ValueChanged = function(self, color)
 		previewtext:SetColor(color)
 	end
-	
+
 	contentbox.OnTextChanged = function(self)
 		previewtext:SetText(contentbox:GetValue())
 		previewtext:SizeToContents()
 		previewtext:Center()
 	end
-	
+
 	frame:MakePopup()
 end
 
@@ -244,22 +244,22 @@ function ulx.showNameTagDialog(targetPlayer)
 		Derma_Query("You may only change rainbow tags via the data file!", "Rainbow Tags", "Okay")
 		return
 	end
-	
+
 	local steamID = targetPlayer:SteamID()
 	local w,h = 250,189
-	
+
 	local frame = vgui.Create("DFrame")
 	frame:SetSize(w, h)
 	frame:SetTitle(Format("Set %s's Name Tag", targetPlayer:Nick()))
 	frame:Center()
-	
+
 	local contentbox = vgui.Create("DTextEntry", frame)
 	if ulx.nameTags[steamID] then
 		contentbox:SetValue(ulx.nameTags[steamID].content)
 	end
 	contentbox:StretchToParent(5, 30, 5, 0)
 	contentbox:SetTall(25)
-	
+
 	local colormixer = vgui.Create("DColorMixer", frame)
 	if ulx.nameTags[steamID] then
 		colormixer:SetColor(ulx.nameTags[steamID].color)
@@ -269,24 +269,24 @@ function ulx.showNameTagDialog(targetPlayer)
 	colormixer:SetPalette(false)
 	colormixer:StretchToParent(5, 60, 5, 0)
 	colormixer:SetTall(68)
-	
+
 	local previewpanel = vgui.Create("DPanel", frame)
 	previewpanel:SetBackgroundColor(Color(0, 0, 0))
 	previewpanel:StretchToParent(5, 133, 5, 0)
 	previewpanel:SetTall(24)
-	
+
 	local previewtext = vgui.Create("DLabel", previewpanel)
 	previewtext:SetFont("treb_small")
 	if ulx.nameTags[steamID] then
-		previewtext:SetText(ulx.nameTags[steamID].content)	
+		previewtext:SetText(ulx.nameTags[steamID].content)
 		previewtext:SetColor(ulx.nameTags[steamID].color)
 	else
 		previewtext:SetText("")
 	end
 	previewtext:SizeToContents()
 	previewtext:Center()
-	
-	local submitButton = vgui.Create("DButton", frame)	
+
+	local submitButton = vgui.Create("DButton", frame)
 	submitButton:SetText("Set Tag")
 	submitButton:SetWidth(100)
 	submitButton:SetPos(5, 162)
@@ -296,16 +296,16 @@ function ulx.showNameTagDialog(targetPlayer)
 		RunConsoleCommand("ulx", "tag", targetPlayer:Nick(), contentbox:GetValue(), color.r, color.g, color.b)
 		frame:Remove()
 	end
-	
+
 	colormixer.ValueChanged = function(self, color)
 		previewtext:SetColor(color)
 	end
-	
+
 	contentbox.OnTextChanged = function(self)
 		previewtext:SetText(contentbox:GetValue())
 		previewtext:SizeToContents()
 		previewtext:Center()
 	end
-	
+
 	frame:MakePopup()
 end
